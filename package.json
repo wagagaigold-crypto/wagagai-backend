@@ -5,7 +5,8 @@
   "main": "specified/index.ts",
   "scripts": {
     "dev": "nodemon  src/index.ts",
-    "build": "tsc",
+    "build": "tsc && cp -r src/views dist/views && cp -r src/assets dist/assets",
+    "start": "node dist/index.js",
     "prod": "tsc && rm -rf dist/views && cp -r src/views dist/views && node dist/index.js"
   },
   "keywords": [],
