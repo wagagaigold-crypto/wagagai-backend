@@ -32,6 +32,11 @@ export async function generateCertificatePDF(
   const logoBytes = fs.readFileSync(logoPath);
   const logoImg = await doc.embedPng(logoBytes);
 
+  // Embed signature
+  const sigPath = path.join(__dirname, "../../assets/wagagai-signature-new.png");
+  const sigBytes = fs.readFileSync(sigPath);
+  const sigImg = await doc.embedPng(sigBytes);
+
   const bInset = 4;
   const bInset2 = 7;
 
@@ -209,14 +214,15 @@ export async function generateCertificatePDF(
     color: GRAY,
   });
 
-  // Signature line
-  y -= 18;
-  const sigW = 50;
-  back.drawLine({
-    start: { x: (CARD_W - sigW) / 2, y },
-    end: { x: (CARD_W + sigW) / 2, y },
-    thickness: 0.3,
-    color: GOLD,
+  // Signature image
+  y -= 22;
+  const sigDrawW = 60;
+  const sigDrawH = (sigImg.height / sigImg.width) * sigDrawW;
+  back.drawImage(sigImg, {
+    x: (CARD_W - sigDrawW) / 2,
+    y: y - sigDrawH,
+    width: sigDrawW,
+    height: sigDrawH,
   });
 
   const pdfBytes = await doc.save();
