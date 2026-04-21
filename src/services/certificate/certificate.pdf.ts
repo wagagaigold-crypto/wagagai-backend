@@ -32,7 +32,7 @@ export async function generateCertificatePDF(
   const logoBytes = fs.readFileSync(logoPath);
   const logoImg = await doc.embedPng(logoBytes);
 
-  // Embed signature
+  // Embed signature (white strokes for dark background)
   const sigPath = path.join(__dirname, "../../assets/wagagai-signature-new.png");
   const sigBytes = fs.readFileSync(sigPath);
   const sigImg = await doc.embedPng(sigBytes);
@@ -43,33 +43,19 @@ export async function generateCertificatePDF(
   // ─── PAGE 1: FRONT (Logo only) ────────────────
   const front = doc.addPage([CARD_W, CARD_H]);
 
+  front.drawRectangle({ x: 0, y: 0, width: CARD_W, height: CARD_H, color: DARK });
+
   front.drawRectangle({
-    x: 0,
-    y: 0,
-    width: CARD_W,
-    height: CARD_H,
-    color: DARK,
+    x: bInset, y: bInset,
+    width: CARD_W - bInset * 2, height: CARD_H - bInset * 2,
+    borderColor: GOLD, borderWidth: 0.5,
+  });
+  front.drawRectangle({
+    x: bInset2, y: bInset2,
+    width: CARD_W - bInset2 * 2, height: CARD_H - bInset2 * 2,
+    borderColor: GOLD, borderWidth: 0.25,
   });
 
-  // Double gold border
-  front.drawRectangle({
-    x: bInset,
-    y: bInset,
-    width: CARD_W - bInset * 2,
-    height: CARD_H - bInset * 2,
-    borderColor: GOLD,
-    borderWidth: 0.5,
-  });
-  front.drawRectangle({
-    x: bInset2,
-    y: bInset2,
-    width: CARD_W - bInset2 * 2,
-    height: CARD_H - bInset2 * 2,
-    borderColor: GOLD,
-    borderWidth: 0.25,
-  });
-
-  // Logo centered
   const logoScale = 0.28;
   const logoW = logoImg.width * logoScale;
   const logoH = logoImg.height * logoScale;
@@ -80,33 +66,20 @@ export async function generateCertificatePDF(
     height: logoH,
   });
 
-  // ─── PAGE 2: BACK (Capgold-style) ─────────────
+  // ─── PAGE 2: BACK ─────────────────────────────
   const back = doc.addPage([CARD_W, CARD_H]);
 
-  back.drawRectangle({
-    x: 0,
-    y: 0,
-    width: CARD_W,
-    height: CARD_H,
-    color: DARK,
-  });
+  back.drawRectangle({ x: 0, y: 0, width: CARD_W, height: CARD_H, color: DARK });
 
-  // Double gold border
   back.drawRectangle({
-    x: bInset,
-    y: bInset,
-    width: CARD_W - bInset * 2,
-    height: CARD_H - bInset * 2,
-    borderColor: GOLD,
-    borderWidth: 0.5,
+    x: bInset, y: bInset,
+    width: CARD_W - bInset * 2, height: CARD_H - bInset * 2,
+    borderColor: GOLD, borderWidth: 0.5,
   });
   back.drawRectangle({
-    x: bInset2,
-    y: bInset2,
-    width: CARD_W - bInset2 * 2,
-    height: CARD_H - bInset2 * 2,
-    borderColor: GOLD,
-    borderWidth: 0.25,
+    x: bInset2, y: bInset2,
+    width: CARD_W - bInset2 * 2, height: CARD_H - bInset2 * 2,
+    borderColor: GOLD, borderWidth: 0.25,
   });
 
   // "WAGAGAI" at top
@@ -120,7 +93,6 @@ export async function generateCertificatePDF(
     color: GOLD,
   });
 
-  // --- Capgold-style fields ---
   const leftX = 18;
   const rightX = CARD_W - 18;
   const labelSize = 6;
@@ -128,93 +100,44 @@ export async function generateCertificatePDF(
 
   // Row 1: weight / metal labels
   let y = CARD_H - 60;
-  back.drawText("weight", {
-    x: leftX,
-    y,
-    size: labelSize,
-    font: fontRegular,
-    color: GRAY,
-  });
+  back.drawText("weight", { x: leftX, y, size: labelSize, font: fontRegular, color: GRAY });
   const metalLabel = "metal";
-  const metalLabelW = fontRegular.widthOfTextAtSize(metalLabel, labelSize);
   back.drawText(metalLabel, {
-    x: rightX - metalLabelW,
-    y,
-    size: labelSize,
-    font: fontRegular,
-    color: GRAY,
+    x: rightX - fontRegular.widthOfTextAtSize(metalLabel, labelSize),
+    y, size: labelSize, font: fontRegular, color: GRAY,
   });
 
   // Row 1: weight / metal values
   y -= 20;
-  back.drawText(cert.weight, {
-    x: leftX,
-    y,
-    size: valueSize,
-    font: fontBold,
-    color: WHITE,
-  });
-  const metalVal = cert.metalType;
-  const metalValW = fontBold.widthOfTextAtSize(metalVal, valueSize);
-  back.drawText(metalVal, {
-    x: rightX - metalValW,
-    y,
-    size: valueSize,
-    font: fontBold,
-    color: WHITE,
-  });
+  back.drawText(cert.weight, { x: leftX, y, size: valueSize, font: fontBold, color: WHITE });
+  const metalValW = fontBold.widthOfTextAtSize(cert.metalType, valueSize);
+  back.drawText(cert.metalType, { x: rightX - metalValW, y, size: valueSize, font: fontBold, color: WHITE });
 
   // Row 2: fineness / serial no labels
   y -= 30;
-  back.drawText("fineness", {
-    x: leftX,
-    y,
-    size: labelSize,
-    font: fontRegular,
-    color: GRAY,
-  });
+  back.drawText("fineness", { x: leftX, y, size: labelSize, font: fontRegular, color: GRAY });
   const noLabel = "No.";
-  const noLabelW = fontRegular.widthOfTextAtSize(noLabel, labelSize);
   back.drawText(noLabel, {
-    x: rightX - noLabelW,
-    y,
-    size: labelSize,
-    font: fontRegular,
-    color: GRAY,
+    x: rightX - fontRegular.widthOfTextAtSize(noLabel, labelSize),
+    y, size: labelSize, font: fontRegular, color: GRAY,
   });
 
   // Row 2: fineness / serial no values
   y -= 20;
-  back.drawText(cert.purity, {
-    x: leftX,
-    y,
-    size: valueSize,
-    font: fontBold,
-    color: WHITE,
-  });
-  const serialVal = cert.serialNo;
-  const serialValW = fontBold.widthOfTextAtSize(serialVal, valueSize);
-  back.drawText(serialVal, {
-    x: rightX - serialValW,
-    y,
-    size: valueSize,
-    font: fontBold,
-    color: WHITE,
-  });
+  back.drawText(cert.purity, { x: leftX, y, size: valueSize, font: fontBold, color: WHITE });
+  const serialValW = fontBold.widthOfTextAtSize(cert.serialNo, valueSize);
+  back.drawText(cert.serialNo, { x: rightX - serialValW, y, size: valueSize, font: fontBold, color: WHITE });
 
-  // Certified assayer
+  // Certified assayer label
   y -= 35;
   const caLabel = "certified assayer";
   const caLabelW = fontRegular.widthOfTextAtSize(caLabel, labelSize);
   back.drawText(caLabel, {
     x: (CARD_W - caLabelW) / 2,
-    y,
-    size: labelSize,
-    font: fontRegular,
-    color: GRAY,
+    y, size: labelSize, font: fontRegular, color: GRAY,
   });
 
-  // Signature image
+  // Signature image (white strokes on dark background)
   y -= 22;
   const sigDrawW = 60;
   const sigDrawH = (sigImg.height / sigImg.width) * sigDrawW;
